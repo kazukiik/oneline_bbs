@@ -7,24 +7,57 @@
   $dbh = new PDO($dsn, $user, $password);
   $dbh->query('SET NAMES utf8');
 
+//----------------------------------------------
+// 歯車アイコンクリック時
+  $editName = '';
+  $editComment = '';
+  $id = '';
+  if (!empty($_GET['action']) && $_GET['action'] == 'edit') {
+    $sql = 'SELECT * FROM `posts` WHERE `id`=?';
+    $data[] = $_GET['id'];
+
+// SQL実行
+  $stmt = $dbh->prepare($sql);
+  $stmt ->execute($data);
+
+// データを取得
+  $rec = $stmt->fetch(PDO::FETCH_ASSOC);
+// 値を変数に格納
+  $editName = $rec['nickname'];
+  $editComment = $rec['comment'];
+  $id = $rec['id'];
+  }
+
+
 // POST送信されたときのみ登録処理を実行
   if (!empty($_POST)) {
-  // 
-  $sql = 'INSERT INTO `posts`(`nickname`, `comment`, `created`) VALUES ("seedkun","hello","now()")';
- }
+    if (!empty($_POST['id'])) {
+      // データを更新する
+      $sql = 'UPDATE `posts` SET `nickname`= ?,`comment`=?, WHERE `id` = ?';
+      $data[] = $_POST['nickname'];
+      $data[] = $_POST['comment'];
+      $data[] = $_POST['id'];
 
-  $data[] = $_POST['nickname'];
-  $data[] = $_POST['comment'];
+    }  else {
+      //データを登録する
+      $sql = 'INSERT INTO `posts`(`nickname`, `comment`, `created`) VALUES (?,?, now())';
+      $data = $_POST['nickname'];
+      $data = $_POST['comment'];
+    }
+
+
+
   // SQLを実行
   $stmt = $dbh -> prepare($sql);
   $stmt ->execute($data);
+}
 
 // データの一覧表示
    $sql = 'SELECT * FROM `posts` ORDER BY `created` DESC ';
 
   // SQLを実行
   $stmt = $dbh -> prepare($sql);
-  $stmt ->execute($data);
+  $stmt ->execute();
 
 // データ格納用変数
   $data = array();
@@ -38,7 +71,6 @@
     // 格納用変数にレコードのデータを入れる
     $data[] = $rec;
   }
-
 
 // DBを切断
   $dbh = null;
@@ -94,19 +126,24 @@
           <!-- nickname -->
           <div class="form-group">
             <div class="input-group">
-              <input type="text" name="nickname" class="form-control" id="validate-text" placeholder="nickname" required>
+              <input type="text" name="nickname" class="form-control" id="validate-text" placeholder="nickname" required value="<?php echo $editName ?>">
               <span class="input-group-addon danger"><span class="glyphicon glyphicon-remove"></span></span>
             </div>
           </div>
           <!-- comment -->
           <div class="form-group">
             <div class="input-group" data-validate="length" data-length="4">
-              <textarea type="text" class="form-control" name="comment" id="validate-length" placeholder="comment" required></textarea>
+              <textarea type="text" class="form-control" name="comment" id="validate-length" placeholder="comment" required ><?php echo $editComment ?></textarea>
               <span class="input-group-addon danger"><span class="glyphicon glyphicon-remove"></span></span>
             </div>
           </div>
           <!-- つぶやくボタン -->
-          <button type="submit" class="btn btn-primary col-xs-12" disabled>つぶやく</button>
+          <?php if(!empty($_GET['action']) && $_GET['action'] == 'edit'): ?>
+          <button type="submit" class="btn btn-primary col-xs-12" >更新する</button>
+          <input type="hidden" name="id" value="<?php echo $id; ?>">
+         <?php else: ?>
+          <button type="submit" class="btn btn-primary col-xs-12" >つぶやく</button>
+         <?php endif; ?>
         </form>
       </div>
 
@@ -118,10 +155,12 @@
           } ?>
           <article class="timeline-entry">
               <div class="timeline-entry-inner">
+                  <a href="bbs.php?action=edit&id=<?php echo $d['id']; ?>"> 
                   <div class="timeline-icon bg-success">
                       <i class="entypo-feather"></i>
                       <i class="fa fa-cogs"></i>
                   </div>
+                  </a>
                   <div class="timeline-label">
                    
                      <?php 
