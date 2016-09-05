@@ -1,9 +1,9 @@
 <?php
   // ここにDBに登録する処理を記述する
 // 1 DBへの接続
-  $dsn = 'mysql:dbname=online_bbs;host=localhost';
-  $user = 'root';
-  $password = '';
+  $dsn = 'mysql:dbname=LAA0778999-onelinebbs;host=mysql114.phy.lolipop.lan';
+  $user = 'LAA0778999';
+  $password = '1210kazuki';
   $dbh = new PDO($dsn, $user, $password);
   $dbh->query('SET NAMES utf8');
 
@@ -51,6 +51,23 @@
   $stmt = $dbh -> prepare($sql);
   $stmt ->execute($data);
 }
+
+// ============================================
+// データの削除機能
+  if (!empty($_GET['action']) && $_GET['action'] == 'delete') {
+    $sql = 'DELETE FROM `posts` WHERE id= ?';
+    $data[] =$_GET['id'];
+
+  // SQLを実行
+  $stmt = $dbh -> prepare($sql);
+  $stmt ->execute($data);
+
+  // bbs.phpに画面を遷移する
+  header('Location: bbs.php');
+  exit();
+  }
+// ============================================
+
 
 // データの一覧表示
    $sql = 'SELECT * FROM `posts` ORDER BY `created` DESC ';
@@ -172,6 +189,7 @@
 
                       <h2><a href="#"><?php echo $d['nickname']; ?></a> <span><?php echo $created; ?></span></h2>
                       <p><?php echo $d['comment']; ?></p>
+                      <a href="bbs.php?action=delete&id=<?php echo $d['id']; ?>" onclick="return confirm('本当に削除しますか？');"><i class="fa fa-trash trash" aria-hidden="true"></i></a>
                   </div>
               </div>
           </article>
